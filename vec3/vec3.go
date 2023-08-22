@@ -13,6 +13,44 @@ type Vec3 struct {
 	X, Y, Z float64
 }
 
+type Color struct {
+	ColorX, ColorY, ColorZ int
+}
+
+type Point3 = Vec3
+
+type Ray struct {
+	Origin    Point3
+	Direction Vec3
+}
+
+// Ray functions
+
+func (r Ray) GetOrigin() Point3 {
+	return r.Origin
+}
+
+func (r Ray) GetDirection() Vec3 {
+	return r.Direction
+}
+
+func (r Ray) At(t float64) Vec3 {
+
+	return r.GetOrigin().Add(*r.GetDirection().MultiplyFloat(t))
+}
+
+// Color functions
+func (v Vec3) ConvertToRGB() *Color {
+	r := int(COLOR_MAX * v.GetX())
+	g := int(COLOR_MAX * v.GetY())
+	b := int(COLOR_MAX * v.GetZ())
+	return &Color{r, g, b}
+}
+
+func (c Color) String() string {
+	return fmt.Sprintf("%d %d %d", c.ColorX, c.ColorY, c.ColorZ)
+}
+
 // Defining "class" methods for Vec3
 func (v Vec3) GetX() float64 {
 	return v.X
@@ -45,21 +83,21 @@ func (v Vec3) IndeXAt(i int) float64 {
 	}
 }
 
-func (v Vec3) PlusEqual(v2 Vec3) Vec3 {
+func (v *Vec3) PlusEqual(v2 Vec3) *Vec3 {
 	v.Z += v2.Z
 	v.Y += v2.Y
 	v.Z += v2.Z
 	return v
 }
 
-func (v Vec3) TimesEqual(t float64) Vec3 {
+func (v *Vec3) TimesEqual(t float64) *Vec3 {
 	v.X *= t
 	v.Y *= t
 	v.Z *= t
 	return v
 }
 
-func (v Vec3) DivideEqual(t float64) Vec3 {
+func (v Vec3) DivideEqual(t float64) *Vec3 {
 	return v.TimesEqual(1 / t)
 }
 
@@ -80,19 +118,19 @@ func (v Vec3) Add(v2 Vec3) Vec3 {
 	return Vec3{v.X + v2.X, v.Y + v2.Y, v.Z + v2.Z}
 }
 
-func (v Vec3) Subtract(v2 Vec3) Vec3 {
-	return Vec3{v.X - v2.X, v.Y - v2.Y, v.Z - v2.Z}
+func (v Vec3) Subtract(v2 Vec3) *Vec3 {
+	return &Vec3{v.X - v2.X, v.Y - v2.Y, v.Z - v2.Z}
 }
 
-func (v Vec3) MultiplyVec(v2 Vec3) Vec3 {
-	return Vec3{v.X * v2.X, v.Y * v2.Y, v.Z * v2.Z}
+func (v Vec3) MultiplyVec(v2 Vec3) *Vec3 {
+	return &Vec3{v.X * v2.X, v.Y * v2.Y, v.Z * v2.Z}
 }
 
-func (v Vec3) MultiplyFloat(t float64) Vec3 {
-	return Vec3{v.X * t, v.Y * t, v.Z * t}
+func (v Vec3) MultiplyFloat(t float64) *Vec3 {
+	return &Vec3{v.X * t, v.Y * t, v.Z * t}
 }
 
-func (v Vec3) DivideFloat(t float64) Vec3 {
+func (v Vec3) DivideFloat(t float64) *Vec3 {
 	return v.MultiplyFloat(1 / t)
 }
 
@@ -100,10 +138,10 @@ func (v Vec3) Dot(v2 Vec3) float64 {
 	return v.X*v2.X + v.Y*v2.Y + v.Z*v2.Z
 }
 
-func (v Vec3) Cross(v2 Vec3) Vec3 {
-	return Vec3{v.Y*v2.Z - v.Z*v2.Y, v.Z*v2.X - v.X*v2.Z, v.X*v2.Y - v.Y*v2.X}
+func (v Vec3) Cross(v2 Vec3) *Vec3 {
+	return &Vec3{v.Y*v2.Z - v.Z*v2.Y, v.Z*v2.X - v.X*v2.Z, v.X*v2.Y - v.Y*v2.X}
 }
 
-func (v Vec3) UnitVector() Vec3 {
+func (v Vec3) UnitVector() *Vec3 {
 	return v.DivideFloat(v.Length())
 }
