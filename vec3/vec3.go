@@ -3,6 +3,7 @@ package vec3
 import (
 	"fmt"
 	"go-tracer/src/interval"
+	"go-tracer/src/utils"
 	"math"
 )
 
@@ -95,6 +96,10 @@ func (v Vec3) LengthSquared() float64 {
 	return v.X*v.X + v.Y*v.Y + v.Z*v.Z
 }
 
+func (v Vec3) LinearToGamma(linear_component float64) float64 {
+	return math.Sqrt(linear_component)
+}
+
 // Simulating the << overload, but writing our own String() method
 func (v Vec3) String(samples_per_pixel int) string {
 	r := v.GetX()
@@ -105,6 +110,10 @@ func (v Vec3) String(samples_per_pixel int) string {
 	r *= scale
 	g *= scale
 	b *= scale
+
+	r = v.LinearToGamma(r)
+	g = v.LinearToGamma(g)
+	b = v.LinearToGamma(b)
 
 	var intensity interval.Interval = interval.Interval{Min: 0.000, Max: 0.999}
 	return fmt.Sprintf("%d %d %d", int(COLOR_MAX_INT*intensity.Clamp(r)),
@@ -142,4 +151,33 @@ func (v Vec3) Cross(v2 Vec3) *Vec3 {
 
 func (v Vec3) UnitVector() *Vec3 {
 	return v.DivideFloat(v.Length())
+}
+
+func (v Vec3) Random() *Vec3 {
+	return &Vec3{X: utils.RandomDouble(), Y: utils.RandomDouble(), Z: utils.RandomDouble()}
+}
+
+func (v Vec3) RandomRange(min, max float64) *Vec3 {
+	return &Vec3{X: utils.RandomDoubleRange(min, max), Y: utils.RandomDoubleRange(min, max), Z: utils.RandomDoubleRange(min, max)}
+}
+
+func (v Vec3) RandomInUnitSphere() *Vec3 {
+	p := v.RandomRange(-1, 1)
+	if p.LengthSquared() < 1 {
+		return v.RandomInUnitSphere()
+	}
+	return p
+}
+
+func (v Vec3) RandomUnitVector() *Vec3 {
+	return v.RandomInUnitSphere().UnitVector()
+}
+
+func (v Vec3) RandomOnHemiSphere(normal *Vec3) *Vec3 {
+	on_unit_sphere := v.RandomUnitVector()
+	if on_unit_sphere.Dot(*normal) > 0.0 {
+		return on_unit_sphere
+	} else {
+		return on_unit_sphere.MultiplyFloat(-1.0)
+	}
 }

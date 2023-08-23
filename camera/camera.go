@@ -16,16 +16,24 @@ type Camera struct {
 	ImageWidth      int
 	ImageHeight     int
 	SamplesPerPixel int
+	MaxDepth        int
 	Center          vec3.Point3
 	Pixel00_loc     vec3.Point3
 	PixelDeltaU     vec3.Vec3
 	PixelDeltaV     vec3.Vec3
 }
 
-func (c *Camera) RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Vec3 {
+func (c *Camera) RayColor(r *vec3.Ray, depth int, world hittable.Hittable) vec3.Vec3 {
 	var rec hittable.HitRecord
-	if world.Hit(r, interval.Interval{Min: 0, Max: utils.INFINITY}, &rec) {
-		computedValue := rec.Normal.Add(vec3.Vec3{X: 1, Y: 1, Z: 1}).MultiplyFloat(0.5)
+
+	if depth <= 0 {
+		return vec3.Vec3{X: 0, Y: 0, Z: 0}
+	}
+
+	if world.Hit(r, interval.Interval{Min: 0.001, Max: utils.INFINITY}, &rec) {
+		direction := rec.Normal.Add(*rec.Normal.RandomUnitVector())
+
+		computedValue := c.RayColor(&vec3.Ray{Origin: rec.P, Direction: direction}, depth-1, world).MultiplyFloat(0.1)
 		return *computedValue
 	}
 
@@ -48,7 +56,7 @@ func (c *Camera) Render(world hittable.Hittable) {
 			var pixel_color vec3.Vec3 = vec3.Vec3{X: 0, Y: 0, Z: 0}
 			for sample := 0; sample < c.SamplesPerPixel; sample++ {
 				r := c.GetRay(i, j)
-				pixel_color.PlusEqual(c.RayColor(&r, world))
+				pixel_color.PlusEqual(c.RayColor(&r, c.MaxDepth, world))
 			}
 			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
 		}
