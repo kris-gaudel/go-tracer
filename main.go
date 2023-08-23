@@ -2,27 +2,22 @@ package main
 
 import (
 	"fmt"
+	"go-tracer/src/hittable"
+	"go-tracer/src/interval"
+	"go-tracer/src/utils"
 	"go-tracer/src/vec3"
 	"log"
 	"math"
 	"strconv"
 )
 
-func HitSphere(center *vec3.Point3, radius float64, r *vec3.Ray) bool {
-	oc := r.GetOrigin().Subtract(*center)
-	a := r.GetDirection().Dot(r.GetDirection())
-	b := 2.0 * oc.Dot(r.GetDirection())
-	c := oc.Dot(*oc) - radius*radius
-	discriminant := b*b - 4*a*c
-
-	return (discriminant >= 0)
-}
-
-func RayColor(r *vec3.Ray) vec3.Color {
-	if HitSphere(&vec3.Point3{X: 0, Y: 0, Z: -1}, 0.5, r) {
-		computedValue := vec3.Vec3{X: 1.0, Y: 0.0, Z: 0.0}
-		return *computedValue.ConvertToRGB()
+func RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Color {
+	var rec hittable.HitRecord
+	if world.Hit(r, interval.Interval{Min: 0, Max: utils.INFINITY}, &rec) {
+		computed_value := rec.Normal.Add(vec3.Vec3{X: 1, Y: 1, Z: 1}).MultiplyFloat(0.5)
+		return *computed_value.ConvertToRGB()
 	}
+
 	unit_direction := r.GetDirection().UnitVector()
 	a := 0.5 * (unit_direction.GetY() + 1.0)
 	startValue := vec3.Vec3{X: 1.0, Y: 1.0, Z: 1.0}
@@ -36,6 +31,13 @@ func main() {
 	aspect_ratio := 16.0 / 9.0
 	var image_width int = 400
 	var image_height int = int(math.Max(float64(image_width)/aspect_ratio, 1.0))
+
+	// World
+	var world hittable.HittableList
+	sphereOne := hittable.Sphere{Center: vec3.Point3{X: 0, Y: 0, Z: -1}, Radius: 0.5}
+	sphereTwo := hittable.Sphere{Center: vec3.Point3{X: 0, Y: -100.5, Z: -1}, Radius: 100}
+	world.Append(sphereOne)
+	world.Append(sphereTwo)
 
 	// Camera
 	focal_length := 1.0
@@ -61,8 +63,8 @@ func main() {
 		for i := 0; i < image_width; i++ {
 			pixel_center := pixel00_loc.Add(*pixel_delta_u.MultiplyFloat(float64(i))).Add(*pixel_delta_v.MultiplyFloat(float64(j)))
 			ray_direction := pixel_center.Subtract(camera_center)
-			ray := vec3.Ray{Origin: camera_center, Direction: *ray_direction}
-			pixel_color := RayColor(&ray)
+			r := vec3.Ray{Origin: camera_center, Direction: *ray_direction}
+			pixel_color := RayColor(&r, world)
 
 			fmt.Println(pixel_color.String())
 		}
