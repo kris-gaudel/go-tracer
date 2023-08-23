@@ -6,9 +6,40 @@ import (
 	"math"
 )
 
+type Material interface {
+	Scatter(r_in *vec3.Ray, rec *HitRecord, attenuation *vec3.Vec3, scattered *vec3.Ray) bool
+}
+
+type Lambertian struct {
+	Albedo vec3.Vec3
+}
+
+func (l Lambertian) Scatter(r_in *vec3.Ray, rec *HitRecord, attenuation *vec3.Vec3, scattered *vec3.Ray) bool {
+	scatter_direction := rec.Normal.Add(*rec.Normal.RandomUnitVector())
+	if scatter_direction.NearZero() {
+		scatter_direction = rec.Normal
+	}
+
+	(*scattered) = vec3.Ray{Origin: rec.P, Direction: scatter_direction}
+	(*attenuation) = l.Albedo
+	return true
+}
+
+type Metal struct {
+	Albedo vec3.Vec3
+}
+
+func (m Metal) Scatter(r_in *vec3.Ray, rec *HitRecord, attenuation *vec3.Vec3, scattered *vec3.Ray) bool {
+	reflected := r_in.GetDirection().UnitVector().Reflect(&rec.Normal)
+	(*scattered) = vec3.Ray{Origin: rec.P, Direction: reflected}
+	(*attenuation) = m.Albedo
+	return (*scattered).GetDirection().Dot(rec.Normal) > 0
+}
+
 type HitRecord struct {
 	P         vec3.Point3
 	Normal    vec3.Vec3
+	Mat       Material
 	T         float64
 	FrontFace bool
 }
@@ -52,6 +83,7 @@ type Sphere struct {
 	Hittable
 	Center vec3.Point3
 	Radius float64
+	Mat    Material
 }
 
 func (hr *HitRecord) SetFaceNormal(ray *vec3.Ray, outwardNormal *vec3.Vec3) {
@@ -88,6 +120,7 @@ func (s Sphere) Hit(r *vec3.Ray, ray_t interval.Interval, rec *HitRecord) bool {
 	(*rec).P = r.At(rec.T)
 	outwardNormal := *(*rec.P.Subtract(s.Center)).DivideFloat(s.Radius)
 	(*rec).SetFaceNormal(r, &outwardNormal)
+	(*rec).Mat = s.Mat
 
 	return true
 }

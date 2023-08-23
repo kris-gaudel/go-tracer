@@ -96,6 +96,11 @@ func (v Vec3) LengthSquared() float64 {
 	return v.X*v.X + v.Y*v.Y + v.Z*v.Z
 }
 
+func (v Vec3) NearZero() bool {
+	s := 1e-8
+	return (math.Abs(v.X) < s) && (math.Abs(v.Y) < s) && (math.Abs(v.Z) < s)
+}
+
 func (v Vec3) LinearToGamma(linear_component float64) float64 {
 	return math.Sqrt(linear_component)
 }
@@ -180,4 +185,8 @@ func (v Vec3) RandomOnHemiSphere(normal *Vec3) *Vec3 {
 	} else {
 		return on_unit_sphere.MultiplyFloat(-1.0)
 	}
+}
+
+func (v Vec3) Reflect(n *Vec3) Vec3 {
+	return *v.Subtract(*n.MultiplyFloat(2 * v.Dot(*n)))
 }

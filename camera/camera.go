@@ -31,10 +31,16 @@ func (c *Camera) RayColor(r *vec3.Ray, depth int, world hittable.Hittable) vec3.
 	}
 
 	if world.Hit(r, interval.Interval{Min: 0.001, Max: utils.INFINITY}, &rec) {
-		direction := rec.Normal.Add(*rec.Normal.RandomUnitVector())
-
-		computedValue := c.RayColor(&vec3.Ray{Origin: rec.P, Direction: direction}, depth-1, world).MultiplyFloat(0.1)
-		return *computedValue
+		var scattered vec3.Ray
+		var attenuation vec3.Vec3
+		if (rec.Mat).Scatter(r, &rec, &attenuation, &scattered) {
+			return *attenuation.MultiplyVec(c.RayColor(&scattered, depth-1, world))
+		} else {
+			return vec3.Vec3{X: 0, Y: 0, Z: 0}
+		}
+		// direction := rec.Normal.Add(*rec.Normal.RandomUnitVector())
+		// computedValue := c.RayColor(&vec3.Ray{Origin: rec.P, Direction: direction}, depth-1, world).MultiplyFloat(0.1)
+		// return *computedValue
 	}
 
 	unit_direction := r.GetDirection().UnitVector()
