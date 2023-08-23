@@ -11,8 +11,8 @@ func main() {
 	var world hittable.HittableList
 	material_ground := hittable.Lambertian{Albedo: vec3.Vec3{X: 0.8, Y: 0.8, Z: 0.0}}
 	material_center := hittable.Lambertian{Albedo: vec3.Vec3{X: 0.7, Y: 0.3, Z: 0.3}}
-	material_left := hittable.Metal{Albedo: vec3.Vec3{X: 0.8, Y: 0.8, Z: 0.8}}
-	material_right := hittable.Metal{Albedo: vec3.Vec3{X: 0.8, Y: 0.6, Z: 0.2}}
+	material_left := hittable.Metal{Albedo: vec3.Vec3{X: 0.8, Y: 0.8, Z: 0.8}, Fuzz: 0.3}
+	material_right := hittable.Metal{Albedo: vec3.Vec3{X: 0.8, Y: 0.6, Z: 0.2}, Fuzz: 1.0}
 
 	sphereOne := hittable.Sphere{Center: vec3.Point3{X: 0, Y: -100.5, Z: -1}, Radius: 100, Mat: material_ground}
 	sphereTwo := hittable.Sphere{Center: vec3.Point3{X: 0, Y: 0, Z: -1}, Radius: 0.5, Mat: material_center}
