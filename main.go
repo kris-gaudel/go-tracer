@@ -8,11 +8,11 @@ import (
 	"go-tracer/src/vec3"
 )
 
-func RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Color {
+func RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Vec3 {
 	var rec hittable.HitRecord
 	if world.Hit(r, interval.Interval{Min: 0, Max: utils.INFINITY}, &rec) {
 		computed_value := rec.Normal.Add(vec3.Vec3{X: 1, Y: 1, Z: 1}).MultiplyFloat(0.5)
-		return *computed_value.ConvertToRGB()
+		return *computed_value
 	}
 
 	unit_direction := r.GetDirection().UnitVector()
@@ -20,7 +20,7 @@ func RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Color {
 	startValue := vec3.Vec3{X: 1.0, Y: 1.0, Z: 1.0}
 	endValue := vec3.Vec3{X: 0.5, Y: 0.7, Z: 1.0}
 	computedValue := startValue.MultiplyFloat(1.0 - a).Add(*endValue.MultiplyFloat(a))
-	return *computedValue.ConvertToRGB()
+	return computedValue
 }
 
 func main() {

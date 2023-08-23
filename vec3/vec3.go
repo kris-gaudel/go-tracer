@@ -13,10 +13,6 @@ type Vec3 struct {
 	X, Y, Z float64
 }
 
-type Color struct {
-	ColorX, ColorY, ColorZ int
-}
-
 type Point3 = Vec3
 
 type Ray struct {
@@ -37,18 +33,6 @@ func (r Ray) GetDirection() Vec3 {
 func (r Ray) At(t float64) Vec3 {
 
 	return r.GetOrigin().Add(*r.GetDirection().MultiplyFloat(t))
-}
-
-// Color functions
-func (v Vec3) ConvertToRGB() *Color {
-	r := int(COLOR_MAX * v.GetX())
-	g := int(COLOR_MAX * v.GetY())
-	b := int(COLOR_MAX * v.GetZ())
-	return &Color{r, g, b}
-}
-
-func (c Color) String() string {
-	return fmt.Sprintf("%d %d %d", c.ColorX, c.ColorY, c.ColorZ)
 }
 
 // Defining "class" methods for Vec3
@@ -111,7 +95,10 @@ func (v Vec3) LengthSquared() float64 {
 
 // Simulating the << overload, but writing our own String() method
 func (v Vec3) String() string {
-	return fmt.Sprintf("%f %f %f", v.X, v.Y, v.Z)
+	r := int(COLOR_MAX * v.GetX())
+	g := int(COLOR_MAX * v.GetY())
+	b := int(COLOR_MAX * v.GetZ())
+	return fmt.Sprintf("%d %d %d", r, g, b)
 }
 
 func (v Vec3) Add(v2 Vec3) Vec3 {
