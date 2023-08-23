@@ -2,11 +2,13 @@ package vec3
 
 import (
 	"fmt"
+	"go-tracer/src/interval"
 	"math"
 )
 
 const (
-	COLOR_MAX = 255.999
+	COLOR_MAX     = 255.999
+	COLOR_MAX_INT = 256
 )
 
 type Vec3 struct {
@@ -68,7 +70,7 @@ func (v Vec3) IndeXAt(i int) float64 {
 }
 
 func (v *Vec3) PlusEqual(v2 Vec3) *Vec3 {
-	(*v).Z += v2.Z
+	(*v).X += v2.X
 	(*v).Y += v2.Y
 	(*v).Z += v2.Z
 	return v
@@ -94,11 +96,20 @@ func (v Vec3) LengthSquared() float64 {
 }
 
 // Simulating the << overload, but writing our own String() method
-func (v Vec3) String() string {
-	r := int(COLOR_MAX * v.GetX())
-	g := int(COLOR_MAX * v.GetY())
-	b := int(COLOR_MAX * v.GetZ())
-	return fmt.Sprintf("%d %d %d", r, g, b)
+func (v Vec3) String(samples_per_pixel int) string {
+	r := v.GetX()
+	g := v.GetY()
+	b := v.GetZ()
+
+	scale := 1.0 / float64(samples_per_pixel)
+	r *= scale
+	g *= scale
+	b *= scale
+
+	var intensity interval.Interval = interval.Interval{Min: 0.000, Max: 0.999}
+	return fmt.Sprintf("%d %d %d", int(COLOR_MAX_INT*intensity.Clamp(r)),
+		int(COLOR_MAX_INT*intensity.Clamp(g)),
+		int(COLOR_MAX_INT*intensity.Clamp(b)))
 }
 
 func (v Vec3) Add(v2 Vec3) Vec3 {

@@ -12,13 +12,14 @@ import (
 )
 
 type Camera struct {
-	AspectRatio float64
-	ImageWidth  int
-	ImageHeight int
-	Center      vec3.Point3
-	Pixel00_loc vec3.Point3
-	PixelDeltaU vec3.Vec3
-	PixelDeltaV vec3.Vec3
+	AspectRatio     float64
+	ImageWidth      int
+	ImageHeight     int
+	SamplesPerPixel int
+	Center          vec3.Point3
+	Pixel00_loc     vec3.Point3
+	PixelDeltaU     vec3.Vec3
+	PixelDeltaV     vec3.Vec3
 }
 
 func (c *Camera) RayColor(r *vec3.Ray, world hittable.Hittable) vec3.Vec3 {
@@ -44,15 +45,32 @@ func (c *Camera) Render(world hittable.Hittable) {
 	for j := 0; j < c.ImageHeight; j++ {
 		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
 		for i := 0; i < c.ImageWidth; i++ {
-			pixel_center := c.Pixel00_loc.Add(*c.PixelDeltaU.MultiplyFloat(float64(i))).Add(*c.PixelDeltaV.MultiplyFloat(float64(j)))
-			ray_direction := pixel_center.Subtract(c.Center)
-			r := vec3.Ray{Origin: c.Center, Direction: *ray_direction}
-			pixel_color := c.RayColor(&r, world)
-
-			fmt.Println(pixel_color.String())
+			var pixel_color vec3.Vec3 = vec3.Vec3{X: 0, Y: 0, Z: 0}
+			for sample := 0; sample < c.SamplesPerPixel; sample++ {
+				r := c.GetRay(i, j)
+				pixel_color.PlusEqual(c.RayColor(&r, world))
+			}
+			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
 		}
 	}
 	log.Println("Done!")
+}
+
+func (c *Camera) GetRay(i, j int) vec3.Ray {
+	pixel_center := c.Pixel00_loc.Add(*c.PixelDeltaU.MultiplyFloat(float64(i))).Add(*c.PixelDeltaV.MultiplyFloat(float64(j)))
+	pixel_sample := pixel_center.Add(c.PixelSampleSquare())
+
+	ray_origin := c.Center
+	ray_direction := pixel_sample.Subtract(c.Center)
+
+	return vec3.Ray{Origin: ray_origin, Direction: *ray_direction}
+}
+
+func (c *Camera) PixelSampleSquare() vec3.Vec3 {
+	px := -0.5 + utils.RandomDouble()
+	py := -0.5 + utils.RandomDouble()
+
+	return c.PixelDeltaU.MultiplyFloat(px).Add(*c.PixelDeltaV.MultiplyFloat(py))
 }
 
 func (c *Camera) Initalize() {
@@ -60,7 +78,7 @@ func (c *Camera) Initalize() {
 	(*c).AspectRatio = 16.0 / 9.0
 	(*c).ImageWidth = 400
 	(*c).ImageHeight = int(math.Max(float64((*c).ImageWidth)/(*c).AspectRatio, 1.0))
-
+	(*c).SamplesPerPixel = 100
 	// Camera
 	focal_length := 1.0
 	viewport_height := 2.0
