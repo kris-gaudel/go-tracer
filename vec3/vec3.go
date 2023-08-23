@@ -84,16 +84,16 @@ func (v Vec3) IndeXAt(i int) float64 {
 }
 
 func (v *Vec3) PlusEqual(v2 Vec3) *Vec3 {
-	v.Z += v2.Z
-	v.Y += v2.Y
-	v.Z += v2.Z
+	(*v).Z += v2.Z
+	(*v).Y += v2.Y
+	(*v).Z += v2.Z
 	return v
 }
 
 func (v *Vec3) TimesEqual(t float64) *Vec3 {
-	v.X *= t
-	v.Y *= t
-	v.Z *= t
+	(*v).X *= t
+	(*v).Y *= t
+	(*v).Z *= t
 	return v
 }
 

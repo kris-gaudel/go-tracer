@@ -57,9 +57,9 @@ type Sphere struct {
 func (hr *HitRecord) SetFaceNormal(ray *vec3.Ray, outwardNormal *vec3.Vec3) {
 	hr.FrontFace = ray.GetDirection().Dot(*outwardNormal) < 0
 	if hr.FrontFace {
-		hr.Normal = *outwardNormal
+		(*hr).Normal = *outwardNormal
 	} else {
-		hr.Normal = *(*outwardNormal).MultiplyFloat(-1)
+		(*hr).Normal = *(*outwardNormal).MultiplyFloat(-1)
 	}
 }
 
