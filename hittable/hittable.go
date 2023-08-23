@@ -2,6 +2,7 @@ package hittable
 
 import (
 	"go-tracer/src/interval"
+	"go-tracer/src/utils"
 	"go-tracer/src/vec3"
 	"math"
 )
@@ -36,6 +37,41 @@ func (m Metal) Scatter(r_in *vec3.Ray, rec *HitRecord, attenuation *vec3.Vec3, s
 	(*scattered) = vec3.Ray{Origin: rec.P, Direction: reflected.Add(*r_in.Direction.RandomUnitVector().MultiplyFloat(m.Fuzz))}
 	(*attenuation) = m.Albedo
 	return (*scattered).GetDirection().Dot(rec.Normal) > 0
+}
+
+type Dielectric struct {
+	Ir float64
+}
+
+func Reflectance(cosine, ref_idx float64) float64 {
+	// Schlick's approximation for reflectance
+	r0 := (1 - ref_idx) / (1 + ref_idx)
+	r0 = r0 * r0
+	return r0 + (1-r0)*math.Pow((1-cosine), 5)
+}
+
+func (d Dielectric) Scatter(r_in *vec3.Ray, rec *HitRecord, attenuation *vec3.Vec3, scattered *vec3.Ray) bool {
+	(*attenuation) = vec3.Vec3{X: 1.0, Y: 1.0, Z: 1.0}
+	refraction_ratio := 0.0
+	if rec.FrontFace {
+		refraction_ratio = 1.0 / d.Ir
+	} else {
+		refraction_ratio = d.Ir
+	}
+
+	unit_direction := r_in.GetDirection().UnitVector()
+	cos_theta := math.Min(unit_direction.MultiplyFloat(-1).Dot(rec.Normal), 1.0)
+	sin_theta := math.Sqrt(1.0 - cos_theta*cos_theta)
+
+	cannot_refract := refraction_ratio*sin_theta > 1.0
+	var direction vec3.Vec3
+	if cannot_refract || Reflectance(cos_theta, refraction_ratio) > utils.RandomDouble() {
+		direction = unit_direction.Reflect(&rec.Normal)
+	} else {
+		direction = unit_direction.Refract(unit_direction, &rec.Normal, refraction_ratio)
+	}
+	(*scattered) = vec3.Ray{Origin: rec.P, Direction: direction}
+	return true
 }
 
 type HitRecord struct {

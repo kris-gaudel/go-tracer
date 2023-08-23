@@ -190,3 +190,10 @@ func (v Vec3) RandomOnHemiSphere(normal *Vec3) *Vec3 {
 func (v Vec3) Reflect(n *Vec3) Vec3 {
 	return *v.Subtract(*n.MultiplyFloat(2 * v.Dot(*n)))
 }
+
+func (v Vec3) Refract(uv *Vec3, n *Vec3, etai_over_etat float64) Vec3 {
+	cos_theta := math.Min(uv.Negate().Dot(*n), 1.0)
+	r_out_perp := uv.Add(*n.MultiplyFloat(cos_theta)).MultiplyFloat(etai_over_etat)
+	r_out_parallel := (*n).MultiplyFloat(-math.Sqrt(math.Abs(1.0 - r_out_perp.LengthSquared())))
+	return r_out_perp.Add(*r_out_parallel)
+}
