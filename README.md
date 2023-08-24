@@ -1,3 +1,6 @@
+![Final Image](images/out8.jpg)
+
+
 # go-tracer
 A ray tracer written in Go
 
