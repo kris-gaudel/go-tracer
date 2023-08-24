@@ -1,2 +1,7 @@
 # go-tracer
-Ray tracer written in Go
+A ray tracer written in Go
+
+## Features
+- Concurrency (via `go routines`)
+- Materials (Glass, Metal, etc)
+
