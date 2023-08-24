@@ -18,10 +18,14 @@ type Camera struct {
 	SamplesPerPixel int
 	MaxDepth        int
 	VFOV            float64
+	LookFrom        vec3.Point3
+	LookAt          vec3.Point3
+	ViewUp          vec3.Vec3
 	Center          vec3.Point3
 	Pixel00_loc     vec3.Point3
 	PixelDeltaU     vec3.Vec3
 	PixelDeltaV     vec3.Vec3
+	U, V, W         vec3.Vec3
 }
 
 func (c *Camera) RayColor(r *vec3.Ray, depth int, world hittable.Hittable) vec3.Vec3 {
@@ -89,25 +93,27 @@ func (c *Camera) PixelSampleSquare() vec3.Vec3 {
 }
 
 func (c *Camera) Initalize() {
-	// Image
-	(*c).AspectRatio = 16.0 / 9.0
 	(*c).ImageWidth = 400
 	(*c).ImageHeight = int(math.Max(float64((*c).ImageWidth)/(*c).AspectRatio, 1.0))
-	(*c).SamplesPerPixel = 100
-	// Camera
-	focal_length := 1.0
+
+	(*c).Center = c.LookFrom
+
+	focal_length := (c.LookFrom.Subtract(c.LookAt)).Length()
 	theta := utils.DegreesToRadians(c.VFOV)
 	h := math.Tan(theta / 2)
 	viewport_height := 2.0 * h * focal_length
 	viewport_width := viewport_height * (float64((*c).ImageWidth) / float64((*c).ImageHeight))
-	camera_center := vec3.Point3{X: 0, Y: 0, Z: 0}
 
-	viewport_u := vec3.Vec3{X: viewport_width, Y: 0, Z: 0}
-	viewport_v := vec3.Vec3{X: 0, Y: -viewport_height, Z: 0}
+	(*c).W = *c.LookFrom.Subtract(c.LookAt).UnitVector()
+	(*c).U = *c.ViewUp.Cross(c.W).UnitVector()
+	(*c).V = *c.W.Cross(c.U)
 
-	(*c).PixelDeltaU = *viewport_u.DivideFloat(float64((*c).ImageWidth))
-	(*c).PixelDeltaV = *viewport_v.DivideFloat(float64((*c).ImageHeight))
+	viewport_u := c.U.MultiplyFloat(viewport_width)
+	viewport_v := c.V.Negate().MultiplyFloat(viewport_height)
 
-	viewport_upper_left := camera_center.Subtract(vec3.Vec3{X: 0, Y: 0, Z: focal_length}).Subtract(*viewport_u.DivideFloat(2)).Subtract(*viewport_v.DivideFloat(2))
+	(*c).PixelDeltaU = *viewport_u.DivideFloat(float64(c.ImageWidth))
+	(*c).PixelDeltaV = *viewport_v.DivideFloat(float64(c.ImageHeight))
+
+	viewport_upper_left := c.Center.Subtract(*c.W.MultiplyFloat(focal_length)).Subtract(*viewport_u.DivideFloat(2)).Subtract(*viewport_v.DivideFloat(2))
 	(*c).Pixel00_loc = viewport_upper_left.Add(*c.PixelDeltaU.DivideFloat(2)).Add(*c.PixelDeltaV.DivideFloat(2))
 }
