@@ -17,6 +17,7 @@ type Camera struct {
 	ImageHeight     int
 	SamplesPerPixel int
 	MaxDepth        int
+	VFOV            float64
 	Center          vec3.Point3
 	Pixel00_loc     vec3.Point3
 	PixelDeltaU     vec3.Vec3
@@ -95,7 +96,9 @@ func (c *Camera) Initalize() {
 	(*c).SamplesPerPixel = 100
 	// Camera
 	focal_length := 1.0
-	viewport_height := 2.0
+	theta := utils.DegreesToRadians(c.VFOV)
+	h := math.Tan(theta / 2)
+	viewport_height := 2.0 * h * focal_length
 	viewport_width := viewport_height * (float64((*c).ImageWidth) / float64((*c).ImageHeight))
 	camera_center := vec3.Point3{X: 0, Y: 0, Z: 0}
 
