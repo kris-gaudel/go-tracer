@@ -43,9 +43,6 @@ func (c *Camera) RayColor(r *vec3.Ray, depth int, world hittable.Hittable) vec3.
 		} else {
 			return vec3.Vec3{X: 0, Y: 0, Z: 0}
 		}
-		// direction := rec.Normal.Add(*rec.Normal.RandomUnitVector())
-		// computedValue := c.RayColor(&vec3.Ray{Origin: rec.P, Direction: direction}, depth-1, world).MultiplyFloat(0.1)
-		// return *computedValue
 	}
 
 	unit_direction := r.GetDirection().UnitVector()
