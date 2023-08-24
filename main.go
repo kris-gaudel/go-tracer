@@ -37,12 +37,16 @@ func main() {
 	cam.LookFrom = vec3.Point3{X: -2, Y: 2, Z: 1}
 	cam.LookAt = vec3.Point3{X: 0, Y: 0, Z: -1}
 	cam.ViewUp = vec3.Vec3{X: 0, Y: 1, Z: 0}
+	cam.DefocusAngle = 10.0
+	cam.FocusDistance = 3.4
 
 	// Default camera settings
 	// cam.LookFrom = vec3.Point3{X: 0, Y: 0, Z: -1}
 	// cam.LookAt = vec3.Point3{X: 0, Y: 0, Z: 0}
 	// cam.ViewUp = vec3.Vec3{X: 0, Y: 1, Z: 0}
 	// cam.VFOV = 90.0
+	// cam.DefocusAngle = 0.0
+	// cam.FocusDistance = 10.0
 	cam.Render(&world)
 
 }

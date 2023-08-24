@@ -21,10 +21,14 @@ type Camera struct {
 	LookFrom        vec3.Point3
 	LookAt          vec3.Point3
 	ViewUp          vec3.Vec3
+	DefocusAngle    float64
+	FocusDistance   float64
 	Center          vec3.Point3
 	Pixel00_loc     vec3.Point3
 	PixelDeltaU     vec3.Vec3
 	PixelDeltaV     vec3.Vec3
+	DefocusDiskU    vec3.Vec3
+	DefocusDiskV    vec3.Vec3
 	U, V, W         vec3.Vec3
 }
 
@@ -76,10 +80,21 @@ func (c *Camera) GetRay(i, j int) vec3.Ray {
 	pixel_center := c.Pixel00_loc.Add(*c.PixelDeltaU.MultiplyFloat(float64(i))).Add(*c.PixelDeltaV.MultiplyFloat(float64(j)))
 	pixel_sample := pixel_center.Add(c.PixelSampleSquare())
 
-	ray_origin := c.Center
-	ray_direction := pixel_sample.Subtract(c.Center)
+	ray_origin := vec3.Point3{X: 0, Y: 0, Z: 0}
+	if c.DefocusAngle <= 0 {
+		ray_origin = c.Center
+	} else {
+		ray_origin = c.DefocusDiskSample()
+	}
+
+	ray_direction := pixel_sample.Subtract(ray_origin)
 
 	return vec3.Ray{Origin: ray_origin, Direction: *ray_direction}
+}
+
+func (c *Camera) DefocusDiskSample() vec3.Point3 {
+	p := c.LookAt.RandomInUnitDisk()
+	return c.Center.Add(*c.DefocusDiskU.MultiplyFloat(p.IndexAt(0))).Add(*c.DefocusDiskV.MultiplyFloat(p.IndexAt(1)))
 }
 
 func (c *Camera) PixelSampleSquare() vec3.Vec3 {
@@ -95,10 +110,10 @@ func (c *Camera) Initalize() {
 
 	(*c).Center = c.LookFrom
 
-	focal_length := (c.LookFrom.Subtract(c.LookAt)).Length()
+	// focal_length := (c.LookFrom.Subtract(c.LookAt)).Length()
 	theta := utils.DegreesToRadians(c.VFOV)
 	h := math.Tan(theta / 2)
-	viewport_height := 2.0 * h * focal_length
+	viewport_height := 2.0 * h * c.FocusDistance
 	viewport_width := viewport_height * (float64((*c).ImageWidth) / float64((*c).ImageHeight))
 
 	(*c).W = *c.LookFrom.Subtract(c.LookAt).UnitVector()
@@ -111,6 +126,10 @@ func (c *Camera) Initalize() {
 	(*c).PixelDeltaU = *viewport_u.DivideFloat(float64(c.ImageWidth))
 	(*c).PixelDeltaV = *viewport_v.DivideFloat(float64(c.ImageHeight))
 
-	viewport_upper_left := c.Center.Subtract(*c.W.MultiplyFloat(focal_length)).Subtract(*viewport_u.DivideFloat(2)).Subtract(*viewport_v.DivideFloat(2))
+	viewport_upper_left := c.Center.Subtract(*c.W.MultiplyFloat(c.FocusDistance)).Subtract(*viewport_u.DivideFloat(2)).Subtract(*viewport_v.DivideFloat(2))
 	(*c).Pixel00_loc = viewport_upper_left.Add(*c.PixelDeltaU.DivideFloat(2)).Add(*c.PixelDeltaV.DivideFloat(2))
+
+	defocus_radius := c.FocusDistance * math.Tan(utils.DegreesToRadians(c.DefocusAngle/2))
+	(*c).DefocusDiskU = *c.U.MultiplyFloat(defocus_radius)
+	(*c).DefocusDiskV = *c.V.MultiplyFloat(defocus_radius)
 }

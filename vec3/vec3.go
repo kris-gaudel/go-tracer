@@ -57,7 +57,7 @@ func (v Vec3) Negate() Vec3 {
 	return Vec3{-(v.X), -(v.Y), -(v.Z)}
 }
 
-func (v Vec3) IndeXAt(i int) float64 {
+func (v Vec3) IndexAt(i int) float64 {
 	// Simulate the [] operator overload
 	if i == 0 {
 		return v.X
@@ -156,6 +156,14 @@ func (v Vec3) Cross(v2 Vec3) *Vec3 {
 
 func (v Vec3) UnitVector() *Vec3 {
 	return v.DivideFloat(v.Length())
+}
+
+func (v Vec3) RandomInUnitDisk() Vec3 {
+	p := Vec3{X: utils.RandomDoubleRange(-1, 1), Y: utils.RandomDoubleRange(-1, 1), Z: 0}
+	if p.LengthSquared() < 1.0 {
+		return p
+	}
+	return p.RandomInUnitDisk()
 }
 
 func (v Vec3) Random() *Vec3 {
