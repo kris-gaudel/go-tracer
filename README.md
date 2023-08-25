@@ -13,3 +13,8 @@ A ray tracer written in Go - adapted from [Ray Tracing In One Weekend](https://r
 - Concurrency (via `go routines`)
 - Materials (Glass, Metal, etc) 
 - Unit Tests
+
+## Running the Ray Tracer
+1. `go install`
+2. `go run main.go > out.ppm`
+
