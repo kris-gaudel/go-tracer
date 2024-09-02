@@ -8,7 +8,9 @@ import (
 	"go-tracer/src/vec3"
 	"log"
 	"math"
+	"runtime"
 	"strconv"
+	"sync"
 )
 
 type Camera struct {
@@ -66,20 +68,91 @@ func (c *Camera) computePixelColor(i, j int, world *hittable.Hittable) vec3.Vec3
 	return pixel_color
 }
 
+// Multi-threaded rendering
+type PixelJob struct {
+	i, j int
+}
+
+type PixelResult struct {
+	i, j  int
+	color vec3.Vec3
+}
+
+func (c *Camera) worker(jobs <-chan PixelJob, results chan<- PixelResult, world *hittable.Hittable, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for job := range jobs {
+		color := c.computePixelColor(job.i, job.j, world)
+		results <- PixelResult{i: job.i, j: job.j, color: color}
+	}
+}
+
 func (c *Camera) Render(world hittable.Hittable) {
 	c.Initalize()
 	fmt.Println("P3")
 	fmt.Println(strconv.Itoa(c.ImageWidth) + " " + strconv.Itoa(c.ImageHeight))
 	fmt.Println("255")
+
+	numWorkers := runtime.NumCPU()
+	log.Println("Number of workers: ", numWorkers)
+
+	// Large channels take time to spin up...
+	jobs := make(chan PixelJob, c.ImageWidth*c.ImageHeight)
+	results := make(chan PixelResult, c.ImageWidth*c.ImageHeight)
+
+	var wg sync.WaitGroup
+	for w := 0; w < numWorkers; w++ {
+		wg.Add(1)
+		go c.worker(jobs, results, &world, &wg)
+	}
+
+	go func() {
+		for j := 0; j < c.ImageHeight; j++ {
+			for i := 0; i < c.ImageWidth; i++ {
+				jobs <- PixelJob{i: i, j: j}
+			}
+		}
+		close(jobs)
+	}()
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	pixelColors := make([][]vec3.Vec3, c.ImageHeight)
+	for i := range pixelColors {
+		pixelColors[i] = make([]vec3.Vec3, c.ImageWidth)
+	}
+
+	for result := range results {
+		pixelColors[result.j][result.i] = result.color
+	}
+
 	for j := 0; j < c.ImageHeight; j++ {
-		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
+		log.Println("Scanlines remaining:", c.ImageHeight-j)
 		for i := 0; i < c.ImageWidth; i++ {
-			pixel_color := c.computePixelColor(i, j, &world)
-			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
+			fmt.Println(pixelColors[j][i].String(c.SamplesPerPixel))
 		}
 	}
+
 	log.Println("Done!")
 }
+
+// No Multi-threading
+// func (c *Camera) Render(world hittable.Hittable) {
+// 	c.Initalize()
+// 	fmt.Println("P3")
+// 	fmt.Println(strconv.Itoa(c.ImageWidth) + " " + strconv.Itoa(c.ImageHeight))
+// 	fmt.Println("255")
+// 	for j := 0; j < c.ImageHeight; j++ {
+// 		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
+// 		for i := 0; i < c.ImageWidth; i++ {
+// 			pixel_color := c.computePixelColor(i, j, &world)
+// 			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
+// 		}
+// 	}
+// 	log.Println("Done!")
+// }
 
 func (c *Camera) GetRay(i, j int) vec3.Ray {
 	pixel_center := c.Pixel00_loc.Add(*c.PixelDeltaU.MultiplyFloat(float64(i))).Add(*c.PixelDeltaV.MultiplyFloat(float64(j)))
