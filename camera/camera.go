@@ -57,6 +57,15 @@ func (c *Camera) RayColor(r *vec3.Ray, depth int, world hittable.Hittable) vec3.
 	return computedValue
 }
 
+func (c *Camera) computePixelColor(i, j int, world hittable.Hittable) vec3.Vec3 {
+	var pixel_color vec3.Vec3
+	for sample := 0; sample < c.SamplesPerPixel; sample++ {
+		r := c.GetRay(i, j)
+		pixel_color.PlusEqual(c.RayColor(&r, c.MaxDepth, world))
+	}
+	return pixel_color
+}
+
 func (c *Camera) Render(world hittable.Hittable) {
 	c.Initalize()
 	fmt.Println("P3")
@@ -65,11 +74,7 @@ func (c *Camera) Render(world hittable.Hittable) {
 	for j := 0; j < c.ImageHeight; j++ {
 		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
 		for i := 0; i < c.ImageWidth; i++ {
-			var pixel_color vec3.Vec3 = vec3.Vec3{X: 0, Y: 0, Z: 0}
-			for sample := 0; sample < c.SamplesPerPixel; sample++ {
-				r := c.GetRay(i, j)
-				pixel_color.PlusEqual(c.RayColor(&r, c.MaxDepth, world))
-			}
+			pixel_color := c.computePixelColor(i, j, world)
 			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
 		}
 	}
