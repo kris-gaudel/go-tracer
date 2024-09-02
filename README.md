@@ -10,6 +10,11 @@ A ray tracer written in Go - adapted from [Ray Tracing In One Weekend](https://r
 - Learn about concurrency and using multiple CPU cores for rendering
 
 ## Features
-- Concurrency (via `go routines`)
+- Concurrency (via `go routines`) (WIP)
 - Materials (Glass, Metal, etc) 
 - Unit Tests
+
+## Running the Ray Tracer
+1. `go install`
+2. `go run main.go > out.ppm`
+
