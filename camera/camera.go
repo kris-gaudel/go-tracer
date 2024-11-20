@@ -86,7 +86,7 @@ func (c *Camera) worker(jobs <-chan PixelJob, results chan<- PixelResult, world 
 	}
 }
 
-func (c *Camera) Render(world hittable.Hittable) {
+func (c *Camera) RenderMulti(world hittable.Hittable) {
 	c.Initalize()
 	fmt.Println("P3")
 	fmt.Println(strconv.Itoa(c.ImageWidth) + " " + strconv.Itoa(c.ImageHeight))
@@ -139,20 +139,20 @@ func (c *Camera) Render(world hittable.Hittable) {
 }
 
 // No Multi-threading
-// func (c *Camera) Render(world hittable.Hittable) {
-// 	c.Initalize()
-// 	fmt.Println("P3")
-// 	fmt.Println(strconv.Itoa(c.ImageWidth) + " " + strconv.Itoa(c.ImageHeight))
-// 	fmt.Println("255")
-// 	for j := 0; j < c.ImageHeight; j++ {
-// 		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
-// 		for i := 0; i < c.ImageWidth; i++ {
-// 			pixel_color := c.computePixelColor(i, j, &world)
-// 			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
-// 		}
-// 	}
-// 	log.Println("Done!")
-// }
+func (c *Camera) RenderSingle(world hittable.Hittable) {
+	c.Initalize()
+	fmt.Println("P3")
+	fmt.Println(strconv.Itoa(c.ImageWidth) + " " + strconv.Itoa(c.ImageHeight))
+	fmt.Println("255")
+	for j := 0; j < c.ImageHeight; j++ {
+		log.Println("Scanlines remaining: " + strconv.Itoa(c.ImageHeight-j))
+		for i := 0; i < c.ImageWidth; i++ {
+			pixel_color := c.computePixelColor(i, j, &world)
+			fmt.Println(pixel_color.String((*c).SamplesPerPixel))
+		}
+	}
+	log.Println("Done!")
+}
 
 func (c *Camera) GetRay(i, j int) vec3.Ray {
 	pixel_center := c.Pixel00_loc.Add(*c.PixelDeltaU.MultiplyFloat(float64(i))).Add(*c.PixelDeltaV.MultiplyFloat(float64(j)))
