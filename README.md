@@ -35,6 +35,6 @@ Performance measurements for the sample scene (on average):
 - Single-threaded mode: ~38 seconds
 - Multi-threaded mode: ~20 seconds
 
-The multi-threaded implementation provides approximately a 47% reduction in rendering time compared to the single-threaded version! 
+The multi-threaded implementation provides approximately a 1.9x speed-up in rendering time compared to the single-threaded version! 
 (Results may vary based on your CPU, system resources, etc)
 
